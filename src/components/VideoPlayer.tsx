@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import styles from './VideoPlayer.module.css'
 
 type VideoPlayerProps = {
   isActive: boolean
   isMuted: boolean
   onToggleMuted: () => void
+  preload: 'auto' | 'metadata' | 'none'
   title: string
   videoUrl: string
 }
@@ -13,6 +14,7 @@ export function VideoPlayer({
   isActive,
   isMuted,
   onToggleMuted,
+  preload,
   title,
   videoUrl,
 }: VideoPlayerProps) {
@@ -21,24 +23,43 @@ export function VideoPlayer({
   const [isLoading, setIsLoading] = useState(true)
   const [isPaused, setIsPaused] = useState(false)
   const [progress, setProgress] = useState(0)
+  const wasPlayingBeforeHidden = useRef(false)
 
-  function playVideo(video: HTMLVideoElement) {
+  const playVideo = useCallback((video: HTMLVideoElement) => {
     video.play().catch(() => {
       // Autoplay can still be blocked, so the tap-to-play UI stays available.
     })
-  }
+  }, [])
 
   useEffect(() => {
     const video = videoRef.current
     if (!video) return
 
-    if (isActive) {
+    if (isActive && !document.hidden) {
       // Keep the element mounted so the browser keeps its currentTime.
       playVideo(video)
     } else {
       video.pause()
     }
-  }, [isActive])
+  }, [isActive, playVideo])
+
+  useEffect(() => {
+    function handleVisibilityChange() {
+      const video = videoRef.current
+      if (!video) return
+
+      if (document.hidden) {
+        wasPlayingBeforeHidden.current = !video.paused
+        video.pause()
+      } else if (isActive && wasPlayingBeforeHidden.current) {
+        // Resume only if the browser tab paused this active video.
+        playVideo(video)
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [isActive, playVideo])
 
   function togglePlayback() {
     const video = videoRef.current
@@ -78,7 +99,7 @@ export function VideoPlayer({
         loop
         muted={isMuted}
         playsInline
-        preload={isActive ? 'auto' : 'metadata'}
+        preload={preload}
         src={videoUrl}
         aria-label={title}
         onClick={togglePlayback}

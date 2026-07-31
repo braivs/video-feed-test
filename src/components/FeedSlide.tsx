@@ -11,6 +11,7 @@ type FeedSlideProps = {
   isMuted: boolean
   onToggleLike: () => void
   onToggleMuted: () => void
+  preload: 'auto' | 'metadata' | 'none'
   total: number
 }
 
@@ -22,6 +23,7 @@ export function FeedSlide({
   isMuted,
   onToggleLike,
   onToggleMuted,
+  preload,
   total,
 }: FeedSlideProps) {
   // Pass the accent as a CSS variable so one shared style can render every card.
@@ -40,6 +42,7 @@ export function FeedSlide({
         isActive={isActive}
         isMuted={isMuted}
         onToggleMuted={onToggleMuted}
+        preload={preload}
         title={item.caption}
         videoUrl={item.videoUrl}
       />

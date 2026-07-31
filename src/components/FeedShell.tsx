@@ -28,6 +28,9 @@ export function FeedShell() {
           isMuted={isMuted}
           onToggleLike={() => dispatch(toggleLike(item.id))}
           onToggleMuted={() => dispatch(setMuted(!isMuted))}
+          preload={
+            index === activeIndex ? 'auto' : index === activeIndex + 1 ? 'metadata' : 'none'
+          }
           total={items.length}
         />
       ))}
