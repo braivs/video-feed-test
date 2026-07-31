@@ -1,14 +1,16 @@
 import type { CSSProperties } from 'react'
 import type { FeedItem } from '../types/feed'
 import styles from './FeedSlide.module.css'
+import { VideoPlayer } from './VideoPlayer'
 
 type FeedSlideProps = {
   item: FeedItem
   index: number
+  isActive: boolean
   total: number
 }
 
-export function FeedSlide({ item, index, total }: FeedSlideProps) {
+export function FeedSlide({ item, index, isActive, total }: FeedSlideProps) {
   // Each item provides its own colors through CSS custom properties.
   const slideStyle = {
     '--slide-background': item.background,
@@ -21,12 +23,9 @@ export function FeedSlide({ item, index, total }: FeedSlideProps) {
       className={styles.slide}
       style={slideStyle}
     >
+      {/* Rendering only the active iframe stops the previous cross-origin embed. */}
+      {isActive && <VideoPlayer embedId={item.embedId} title={item.caption} />}
       <div className={styles.grain} />
-
-      <div className={styles.center} aria-hidden="true">
-        <span className={styles.play}>▶</span>
-        <span>Video coming soon</span>
-      </div>
 
       <div className={styles.meta}>
         <p className={styles.author}>{item.author}</p>

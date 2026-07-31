@@ -24,7 +24,13 @@ export function FeedShell() {
 
       {/* One FeedSlide is rendered for every feed item. */}
       {items.map((item, index) => (
-        <FeedSlide key={item.id} item={item} index={index} total={items.length} />
+        <FeedSlide
+          key={item.id}
+          item={item}
+          index={index}
+          isActive={index === activeIndex}
+          total={items.length}
+        />
       ))}
     </main>
   )

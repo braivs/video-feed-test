@@ -1,0 +1,14 @@
+.player {
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  left: 50%;
+  /* Fill the portrait slide with a landscape player and crop its side edges. */
+  inline-size: auto;
+  block-size: 100%;
+  min-inline-size: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  background: #0d0d12;
+  transform: translate(-50%, -50%);
+}

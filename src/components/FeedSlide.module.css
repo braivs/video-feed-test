@@ -16,47 +16,27 @@
 
 .slide::after {
   position: absolute;
-  z-index: -1;
+  z-index: 1;
   inset: 0;
   content: '';
   background: linear-gradient(180deg, rgb(0 0 0 / 15%) 0%, transparent 45%, rgb(0 0 0 / 58%) 100%);
+  pointer-events: none;
 }
 
 .grain {
   position: absolute;
-  z-index: -1;
+  z-index: 1;
   inset: 0;
   opacity: 0.2;
   background-image: radial-gradient(rgb(255 255 255 / 50%) 0.7px, transparent 0.7px);
   background-size: 6px 6px;
   mix-blend-mode: soft-light;
-}
-
-.center {
-  position: absolute;
-  top: 45%;
-  left: 50%;
-  display: grid;
-  gap: 10px;
-  place-items: center;
-  color: rgb(255 255 255 / 80%);
-  font-size: 13px;
-  transform: translate(-50%, -50%);
-}
-
-.play {
-  display: grid;
-  inline-size: 54px;
-  block-size: 54px;
-  place-items: center;
-  padding-left: 3px;
-  border: 1px solid rgb(255 255 255 / 50%);
-  border-radius: 50%;
-  background: rgb(0 0 0 / 16%);
-  font-size: 20px;
+  pointer-events: none;
 }
 
 .meta {
+  position: relative;
+  z-index: 2;
   max-inline-size: 420px;
 }
 
@@ -80,6 +60,7 @@
 
 .actions {
   position: absolute;
+  z-index: 2;
   right: 16px;
   bottom: 36px;
   display: grid;
@@ -114,6 +95,7 @@
 
 .counter {
   position: absolute;
+  z-index: 2;
   top: 18px;
   right: 20px;
   color: rgb(255 255 255 / 78%);
