@@ -1,0 +1,14 @@
+.feed {
+  /* The feed fills the visible mobile viewport, including browser chrome changes. */
+  block-size: 100dvh;
+  overflow-y: auto;
+  /* Native vertical swipe with one-card-at-a-time snapping. */
+  scroll-snap-type: y mandatory;
+  overscroll-behavior-y: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.feed::-webkit-scrollbar {
+  display: none;
+}
