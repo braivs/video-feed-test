@@ -1,8 +1,8 @@
 .feed {
-  /* The feed fills the visible mobile viewport, including browser chrome changes. */
+  /* Use dvh so mobile browser chrome does not leave gaps. */
   block-size: 100dvh;
   overflow-y: auto;
-  /* Native vertical swipe with one-card-at-a-time snapping. */
+  /* Let the browser handle swipe physics and snapping. */
   scroll-snap-type: y mandatory;
   overscroll-behavior-y: contain;
   scrollbar-width: none;
@@ -11,19 +11,4 @@
 
 .feed::-webkit-scrollbar {
   display: none;
-}
-
-.activeIndicator {
-  position: fixed;
-  z-index: 1;
-  top: 18px;
-  left: 18px;
-  padding: 7px 10px;
-  border: 1px solid rgb(255 255 255 / 22%);
-  border-radius: 999px;
-  color: rgb(255 255 255 / 92%);
-  background: rgb(0 0 0 / 22%);
-  backdrop-filter: blur(10px);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
 }

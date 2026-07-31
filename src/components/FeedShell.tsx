@@ -1,16 +1,16 @@
 import type { UIEvent } from 'react'
 import { useAppDispatch, useAppSelector } from '../hooks/redux'
-import { setActiveIndex, setMuted } from '../store/feedSlice'
+import { setActiveIndex, setMuted, toggleLike } from '../store/feedSlice'
 import { FeedSlide } from './FeedSlide'
 import styles from './FeedShell.module.css'
 
 export function FeedShell() {
   const dispatch = useAppDispatch()
-  const { items, activeIndex, isMuted } = useAppSelector((state) => state.feed)
+  const { items, activeIndex, isMuted, likedIds } = useAppSelector((state) => state.feed)
 
   function handleScrollEnd(event: UIEvent<HTMLElement>) {
     const container = event.currentTarget
-    // Every slide has viewport height, so scrollTop maps directly to its index.
+    // Slides are full-screen, so the scroll offset gives us the active index.
     const index = Math.round(container.scrollTop / container.clientHeight)
 
     dispatch(setActiveIndex(index))
@@ -18,18 +18,15 @@ export function FeedShell() {
 
   return (
     <main className={styles.feed} aria-label="Short video feed" onScrollEnd={handleScrollEnd}>
-      <output className={styles.activeIndicator} aria-live="polite">
-        Active: {activeIndex + 1} / {items.length}
-      </output>
-
-      {/* One FeedSlide is rendered for every feed item. */}
       {items.map((item, index) => (
         <FeedSlide
           key={item.id}
           item={item}
           index={index}
           isActive={index === activeIndex}
+          isLiked={likedIds.includes(item.id)}
           isMuted={isMuted}
+          onToggleLike={() => dispatch(toggleLike(item.id))}
           onToggleMuted={() => dispatch(setMuted(!isMuted))}
           total={items.length}
         />

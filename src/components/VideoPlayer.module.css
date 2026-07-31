@@ -2,7 +2,7 @@
   position: absolute;
   z-index: 0;
   inset: 0;
-  /* Cover the portrait slide and crop the left and right edges when necessary. */
+  /* Use cover so landscape sources still fill the portrait slide. */
   inline-size: 100%;
   block-size: 100%;
   background: #0d0d12;
@@ -25,6 +25,52 @@
   font-size: 23px;
   pointer-events: none;
   transform: translate(-50%, -50%);
+}
+
+.loader {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 50%;
+  inline-size: 34px;
+  block-size: 34px;
+  border: 3px solid rgb(255 255 255 / 30%);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.errorState {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  gap: 12px;
+  place-items: center;
+  min-inline-size: 180px;
+  padding: 18px;
+  border-radius: 12px;
+  background: rgb(0 0 0 / 68%);
+  color: #fff;
+  font-size: 14px;
+  transform: translate(-50%, -50%);
+}
+
+.errorState button {
+  padding: 7px 14px;
+  border: 1px solid rgb(255 255 255 / 45%);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.errorState button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
 }
 
 .soundToggle {
@@ -66,4 +112,10 @@
   block-size: 100%;
   background: #fff;
   transform-origin: left;
+}
+
+@keyframes spin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
 }

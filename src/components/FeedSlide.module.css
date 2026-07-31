@@ -1,14 +1,16 @@
 .slide {
+  --slide-accent: #fff;
+
   position: relative;
   display: flex;
-  /* Every slide occupies exactly one screen. */
+  /* One slide = one viewport. */
   block-size: 100dvh;
   overflow: hidden;
   align-items: flex-end;
   padding: 24px 72px 40px 20px;
   color: #fff;
-  background: var(--slide-background);
-  /* Align the slide to the viewport after a swipe. */
+  background: #0d0d12;
+  /* Snap this slide to the viewport after a swipe. */
   scroll-snap-align: start;
   scroll-snap-stop: always;
   isolation: isolate;
@@ -91,6 +93,10 @@
   outline: 2px solid #fff;
   outline-offset: 4px;
   border-radius: 4px;
+}
+
+.actions .liked {
+  color: #ff4d72;
 }
 
 .counter {

@@ -7,7 +7,9 @@ type FeedSlideProps = {
   item: FeedItem
   index: number
   isActive: boolean
+  isLiked: boolean
   isMuted: boolean
+  onToggleLike: () => void
   onToggleMuted: () => void
   total: number
 }
@@ -16,13 +18,14 @@ export function FeedSlide({
   item,
   index,
   isActive,
+  isLiked,
   isMuted,
+  onToggleLike,
   onToggleMuted,
   total,
 }: FeedSlideProps) {
-  // Each item provides its own colors through CSS custom properties.
+  // Pass the accent as a CSS variable so one shared style can render every card.
   const slideStyle = {
-    '--slide-background': item.background,
     '--slide-accent': item.accent,
   } as CSSProperties
 
@@ -32,7 +35,7 @@ export function FeedSlide({
       className={styles.slide}
       style={slideStyle}
     >
-      {/* Keeping native videos mounted preserves their current playback position. */}
+      {/* Keep videos mounted so they resume where the user left off. */}
       <VideoPlayer
         isActive={isActive}
         isMuted={isMuted}
@@ -48,8 +51,14 @@ export function FeedSlide({
       </div>
 
       <aside className={styles.actions} aria-label="Video actions">
-        <button type="button" aria-label="Like video">
-          ♡
+        <button
+          className={isLiked ? styles.liked : undefined}
+          type="button"
+          aria-label={isLiked ? 'Remove like' : 'Like video'}
+          aria-pressed={isLiked}
+          onClick={onToggleLike}
+        >
+          {isLiked ? '♥' : '♡'}
           <span>{item.likes.toLocaleString('ru-RU')}</span>
         </button>
         <button type="button" aria-label="Open comments">
