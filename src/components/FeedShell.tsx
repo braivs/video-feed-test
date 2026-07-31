@@ -1,12 +1,12 @@
 import type { UIEvent } from 'react'
 import { useAppDispatch, useAppSelector } from '../hooks/redux'
-import { setActiveIndex } from '../store/feedSlice'
+import { setActiveIndex, setMuted } from '../store/feedSlice'
 import { FeedSlide } from './FeedSlide'
 import styles from './FeedShell.module.css'
 
 export function FeedShell() {
   const dispatch = useAppDispatch()
-  const { items, activeIndex } = useAppSelector((state) => state.feed)
+  const { items, activeIndex, isMuted } = useAppSelector((state) => state.feed)
 
   function handleScrollEnd(event: UIEvent<HTMLElement>) {
     const container = event.currentTarget
@@ -29,6 +29,8 @@ export function FeedShell() {
           item={item}
           index={index}
           isActive={index === activeIndex}
+          isMuted={isMuted}
+          onToggleMuted={() => dispatch(setMuted(!isMuted))}
           total={items.length}
         />
       ))}

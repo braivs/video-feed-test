@@ -1,14 +1,69 @@
 .player {
   position: absolute;
   z-index: 0;
+  inset: 0;
+  /* Cover the portrait slide and crop the left and right edges when necessary. */
+  inline-size: 100%;
+  block-size: 100%;
+  background: #0d0d12;
+  object-fit: cover;
+}
+
+.playIndicator {
+  position: absolute;
+  z-index: 2;
   top: 50%;
   left: 50%;
-  /* Fill the portrait slide with a landscape player and crop its side edges. */
-  inline-size: auto;
-  block-size: 100%;
-  min-inline-size: 100%;
-  aspect-ratio: 16 / 9;
-  border: 0;
-  background: #0d0d12;
+  display: grid;
+  inline-size: 64px;
+  block-size: 64px;
+  place-items: center;
+  padding-left: 3px;
+  border-radius: 50%;
+  color: #fff;
+  background: rgb(0 0 0 / 45%);
+  font-size: 23px;
+  pointer-events: none;
   transform: translate(-50%, -50%);
+}
+
+.soundToggle {
+  position: absolute;
+  z-index: 3;
+  top: 14px;
+  right: 54px;
+  display: grid;
+  inline-size: 34px;
+  block-size: 34px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgb(255 255 255 / 25%);
+  border-radius: 50%;
+  background: rgb(0 0 0 / 28%);
+  color: #fff;
+  cursor: pointer;
+}
+
+.soundToggle:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+.progressTrack {
+  position: absolute;
+  z-index: 3;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  block-size: 3px;
+  overflow: hidden;
+  background: rgb(255 255 255 / 35%);
+  pointer-events: none;
+}
+
+.progressValue {
+  inline-size: 100%;
+  block-size: 100%;
+  background: #fff;
+  transform-origin: left;
 }

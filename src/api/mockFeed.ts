@@ -9,7 +9,7 @@ export const mockFeed: FeedItem[] = [
     likes: 12_804,
     accent: '#ffb86b',
     background: 'linear-gradient(160deg, #201046 0%, #6d2f94 48%, #ff785b 100%)',
-    embedId: 'zPz9hCrEOlAFt1D',
+    videoUrl: 'https://media.namazon.club/NC78_Sima_vs_Cherviak_fight_4_preview.mp4',
   },
   {
     id: 'nc79',
@@ -18,7 +18,7 @@ export const mockFeed: FeedItem[] = [
     likes: 8_125,
     accent: '#9af7e8',
     background: 'linear-gradient(160deg, #013d55 0%, #008f9c 48%, #63d7b4 100%)',
-    embedId: 'PPllWWxHRkLvKoM',
+    videoUrl: 'https://media.namazon.club/NC79_Sima_vs_Cherviak_fight_5_preview.mp4',
   },
   {
     id: 'nc80',
@@ -27,7 +27,7 @@ export const mockFeed: FeedItem[] = [
     likes: 27_901,
     accent: '#ffe4b5',
     background: 'linear-gradient(160deg, #27180f 0%, #79452b 52%, #d99a58 100%)',
-    embedId: 'xE8kU2VK24l9M2p',
+    videoUrl: 'https://media.namazon.club/NC80_Sima_vs_Alex_fight_6_preview.mp4',
   },
   {
     id: 'nc81',
@@ -36,7 +36,7 @@ export const mockFeed: FeedItem[] = [
     likes: 4_763,
     accent: '#d4e9ff',
     background: 'linear-gradient(160deg, #14233e 0%, #285580 47%, #8ab6d9 100%)',
-    embedId: '7r8bTlQ6VqrDUHH',
+    videoUrl: 'https://media.namazon.club/NC81_Amrita_vs_Alex_fight_2_preview.mp4',
   },
   {
     id: 'nc82',
@@ -45,6 +45,6 @@ export const mockFeed: FeedItem[] = [
     likes: 16_390,
     accent: '#ffd6fa',
     background: 'linear-gradient(160deg, #260737 0%, #6e1d78 50%, #da5f9f 100%)',
-    embedId: 'EMD3fMHCLQHFTit',
+    videoUrl: 'https://media.namazon.club/NC82_Sveta_vs_Alex_fight_2_preview.mp4',
   },
 ]

@@ -7,10 +7,19 @@ type FeedSlideProps = {
   item: FeedItem
   index: number
   isActive: boolean
+  isMuted: boolean
+  onToggleMuted: () => void
   total: number
 }
 
-export function FeedSlide({ item, index, isActive, total }: FeedSlideProps) {
+export function FeedSlide({
+  item,
+  index,
+  isActive,
+  isMuted,
+  onToggleMuted,
+  total,
+}: FeedSlideProps) {
   // Each item provides its own colors through CSS custom properties.
   const slideStyle = {
     '--slide-background': item.background,
@@ -23,8 +32,14 @@ export function FeedSlide({ item, index, isActive, total }: FeedSlideProps) {
       className={styles.slide}
       style={slideStyle}
     >
-      {/* Rendering only the active iframe stops the previous cross-origin embed. */}
-      {isActive && <VideoPlayer embedId={item.embedId} title={item.caption} />}
+      {/* Keeping native videos mounted preserves their current playback position. */}
+      <VideoPlayer
+        isActive={isActive}
+        isMuted={isMuted}
+        onToggleMuted={onToggleMuted}
+        title={item.caption}
+        videoUrl={item.videoUrl}
+      />
       <div className={styles.grain} />
 
       <div className={styles.meta}>

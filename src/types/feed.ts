@@ -5,5 +5,5 @@ export type FeedItem = {
   likes: number
   accent: string
   background: string
-  embedId: string
+  videoUrl: string
 }

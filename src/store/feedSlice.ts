@@ -5,11 +5,13 @@ import type { FeedItem } from '../types/feed'
 type FeedState = {
   items: FeedItem[]
   activeIndex: number
+  isMuted: boolean
 }
 
 const initialState: FeedState = {
   items: mockFeed,
   activeIndex: 0,
+  isMuted: true,
 }
 
 const feedSlice = createSlice({
@@ -19,8 +21,11 @@ const feedSlice = createSlice({
     setActiveIndex(state, action: PayloadAction<number>) {
       state.activeIndex = action.payload
     },
+    setMuted(state, action: PayloadAction<boolean>) {
+      state.isMuted = action.payload
+    },
   },
 })
 
-export const { setActiveIndex } = feedSlice.actions
+export const { setActiveIndex, setMuted } = feedSlice.actions
 export default feedSlice.reducer
