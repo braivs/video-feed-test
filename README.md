@@ -1,39 +1,54 @@
-# Лента медиа-контента — технический план реализации
+# Лента медиа-контента.
 
 Mobile-first веб-страница с вертикальной лентой коротких видео (аналог TikTok / Instagram Reels / YouTube Shorts): пользователь скроллит ленту, активное видео воспроизводится автоматически, следующие элементы подгружаются заранее.
 
-Документ описывает **план реализации**, а не готовый продукт: архитектуру, trade-offs и обоснование решений.
-
----
-
-## Реализовано в прототипе
-
-Прототип использует реальные MP4-ролики из Cloudflare R2 и нативный `<video>`. В нём уже есть:
-
-- mobile-first fullscreen-лента с CSS Scroll Snap;
-- Redux Toolkit для active slide, mute и likes;
-- autoplay muted, play/pause по tap, сохранение позиции при возврате к ролику;
-- глобальное включение звука, progress bar, loading, error state и Retry;
-- preload: active — `auto`, следующий ролик — `metadata`, остальные — `none`;
-- pause/resume через Page Visibility API.
-
-Для компактности MVP пока не включает виртуализацию, API pagination, HLS/ABR, отдельный `PreloadManager` и persistent cache. Эти части описаны ниже как production-стратегия.
+Документ показывает, что реализовано в рабочем прототипе, и дополняет это планом развития для production: архитектурой, обоснованием решений и следующими техническими шагами.
 
 ---
 
 ## Содержание
 
-1. [Реализовано в прототипе](#реализовано-в-прототипе)
+1. [Статус прототипа](#статус-прототипа)
 2. [Цели и критерии успеха](#цели-и-критерии-успеха)
-3. [Общая архитектура](#общая-архитектура)
-4. [Стек и работа с видео/медиа](#1-стек-и-работа-с-видеомедиа)
+3. [Целевая production-архитектура](#целевая-production-архитектура)
+4. [Стек, работа с видео и реализация в прототипе](#1-стек-работа-с-видео-и-реализация-в-прототипе)
 5. [Механизм скролла и жестов](#2-механизм-скролла-между-элементами-ленты)
 6. [Стратегия предзагрузки](#3-стратегия-предзагрузки-контента)
 7. [Управление состоянием](#4-управление-состоянием)
 8. [Производительность](#5-производительность)
-9. [Отличия от TikTok / Reels / Shorts](#6-что-было-бы-сделано-иначе)
-10. [План реализации по этапам](#план-реализации-по-этапам)
-11. [Trade-offs](#trade-offs)
+9. [Что можно улучшить по сравнению с TikTok, Reels и Shorts](#6-что-можно-улучшить-по-сравнению-с-tiktok-reels-и-shorts)
+10. [Прогресс реализации](#прогресс-реализации)
+11. [Что можно улучшить при большем времени](#что-можно-улучшить-при-большем-времени)
+
+---
+
+## Статус прототипа
+
+Прототип использует реальные MP4-ролики из Cloudflare R2 и нативный `<video>`.
+
+| Область | Статус | Что можно проверить |
+|---------|--------|---------------------|
+| Видео | ✅ Готово | Autoplay muted, tap play/pause, sound toggle, resume с прошлой позиции |
+| Лента | ✅ Готово | Fullscreen CSS Scroll Snap и активный слайд в Redux |
+| Предзагрузка | 🟡 MVP | Active — `auto`, следующий ролик — `metadata`, остальные — `none` |
+| State | ✅ Готово | Redux для active slide, mute и likes |
+| Ошибки и фон | ✅ Готово | Loading, Retry, pause/resume через Page Visibility API |
+| Длинная лента | 📋 План | Виртуализация, pagination и отдельный PreloadManager |
+
+### Как запустить
+
+```bash
+Удалённо: 
+https://video-feed-test.vercel.app
+
+Локально:
+npm install
+npm run dev
+```
+
+### Доставка медиа
+
+Видео доставляются из Cloudflare R2 через `https://media.namazon.club`. Это позволяет держать Git-репозиторий и Vercel deployment лёгкими, но использовать реальные MP4 в демо.
 
 ---
 
@@ -47,15 +62,17 @@ Mobile-first веб-страница с вертикальной лентой к
 |---------|------------------|
 | Time to first frame (активный ролик) | ≤ 300–500 ms на 4G |
 | Переключение между роликами | без чёрного экрана, poster → video crossfade |
-| Быстрый fling-скролл | без зависаний, без гонок play/pause |
+| Быстрый скролл с инерцией | без зависаний, без гонок play/pause |
 | Память | не растёт линейно с длиной ленты |
 | Autoplay | стабильный muted autoplay на iOS/Android/desktop |
 
-**Вне scope MVP:** авторизация, комментарии, рекомендательный алгоритм, загрузка UGC, продакшн-аналитика.
+**Вне scope MVP:** авторизация, комментарии, рекомендательный алгоритм, загрузка видео пользователями, продакшн-аналитика.
 
 ---
 
-## Общая архитектура
+## Целевая production-архитектура
+
+Диаграмма ниже описывает целевую архитектуру для длинной production-ленты. Текущий MVP реализует упрощённый вариант: CSS Scroll Snap, Redux, native `<video>` и preload active/+1.
 
 ```mermaid
 flowchart TB
@@ -76,7 +93,7 @@ flowchart TB
 
     subgraph Data["Data Layer"]
         FeedStore["Feed Store"]
-        MediaCache["Media Cache (LRU)"]
+        MediaCache["Media Cache (Least Recently Used)"]
         API["Feed API"]
     end
 
@@ -94,6 +111,8 @@ flowchart TB
     Playback --> Player
 ```
 
+В MVP логика `play()` / `pause()` находится в `VideoPlayer`; отдельного `PlaybackOrchestrator` пока нет. Он указан в схеме как часть целевой production-архитектуры для координации нескольких видео в длинной ленте.
+
 **Ключевой принцип:** один `PlaybackOrchestrator` решает, *какое* видео играет. UI только отображает состояние. Это убирает гонки при быстром скролле, когда несколько компонентов одновременно вызывают `play()` / `pause()`.
 
 **Поток данных при смене слайда:**
@@ -109,13 +128,32 @@ scroll / snap → IntersectionObserver → activeIndex
 
 ---
 
-## 1. Стек и работа с видео/медиа
+## 1. Стек, работа с видео и реализация в прототипе.
+
+### Что есть в прототипе
+
+- React + TypeScript + Vite + CSS Modules + Redux Toolkit;
+- native `<video>` с MP4 из Cloudflare R2;
+- `muted`, `loop`, `playsInline` и глобальный переключатель звука;
+- CSS Scroll Snap и определение активного слайда через `scrollend`;
+- при переходе на другой слайд прошлое видео ставится на паузу, а активное запускается;
+- видео остаются в DOM, поэтому при возврате воспроизведение продолжается с прошлой секунды;
+- при сворачивании вкладки активное видео ставится на паузу; при возврате продолжится, только если до этого играло;
+- tap play/pause, progress bar, loading, Retry и likes;
+- `preload`: active — `auto`, следующий ролик — `metadata`, остальные — `none`;
+- `object-fit: cover` для заполнения вертикального экрана горизонтальным исходным видео.
+
+### Что добавить в рабочем проекте
+
+- несколько версий ролика: MP4/WebM и автоматический выбор качества под скорость интернета (HLS);
+- preview-картинка до старта, отслеживание зависаний и переход на более низкое качество при плохой сети;
+- повторная загрузка при ошибке с увеличением паузы между попытками и выбор стартового качества по состоянию сети.
 
 ### Выбор стека
 
 | Слой | Решение | Обоснование |
 |------|---------|-------------|
-| Framework | React 19 + TypeScript | Предсказуемый lifecycle, экосystem, удобно для тестового |
+| Framework | React 19 + TypeScript | Типизация, предсказуемый жизненный цикл и развитая экосистема. |
 | Bundler | Vite | Быстрый dev, простой деплой статики |
 | Стили | CSS Modules | Изоляция стилей без лишнего веса |
 | Виртуализация | `@tanstack/react-virtual` | Контроль над windowed render длинного списка |
@@ -216,6 +254,18 @@ class PlaybackOrchestrator {
 
 ## 2. Механизм скролла между элементами ленты
 
+### Что есть в прототипе
+
+- CSS Scroll Snap с `100dvh`;
+- `scrollend` вычисляет `activeIndex` и сохраняет его в Redux;
+- tap по активному ролику переключает play/pause.
+
+### Что добавить в рабочем проекте
+
+- IntersectionObserver как дополнительный источник active state;
+- double tap like, long press pause и fallback для браузеров без стабильного `scrollend`;
+- focus management для клавиатуры и screen readers.
+
 ### Подход: CSS Scroll Snap
 
 ```css
@@ -245,12 +295,12 @@ class PlaybackOrchestrator {
 
 ### Определение активного слайда
 
-Два complementary механизма:
+Слайд определяется с помощью двух механизмов:
 
 1. **IntersectionObserver** — элемент с `intersectionRatio ≥ 0.6` становится кандидатом в active.
 2. **`scrollend`** (или debounced scroll) — финальный index после остановки скролла.
 
-При быстром fling IO может «дёргаться» между соседними слайдами — `scrollend` финализирует `activeIndex`:
+При быстром скролле с инерцией IntersectionObserver может «дёргаться» между соседними слайдами — `scrollend` финализирует `activeIndex`:
 
 ```typescript
 container.addEventListener('scrollend', () => {
@@ -284,6 +334,22 @@ container.scrollTo({
 ---
 
 ## 3. Стратегия предзагрузки контента
+
+### Что есть в прототипе
+
+```text
+active → preload="auto"
+next   → preload="metadata"
+other  → preload="none"
+```
+
+Браузер сам использует HTTP Range requests к Cloudflare R2. Для пяти роликов этого достаточно без отдельного менеджера запросов.
+
+### Что добавить в рабочем проекте
+
+- окно +2 с poster/metadata;
+- `PreloadManager`, `AbortController` и лимиты параллельных запросов;
+- `Save-Data`, 2G и velocity-based prefetch.
 
 ### Окно рендера и сети
 
@@ -355,7 +421,21 @@ function schedulePrefetch(index: number) {
 
 ## 4. Управление состоянием
 
+### Что есть в прототипе
+
+- Redux: `items`, `activeIndex`, `isMuted`, `likedIds`;
+- локально в `VideoPlayer`: loading, error, pause state и progress;
+- `currentTime` хранится самим mounted video element, поэтому ролик продолжает воспроизведение с прошлой секунды.
+
+### Что добавить в рабочем проекте
+
+- `viewedIds`, cursor pagination и RTK Query;
+- SessionStorage/IndexedDB cache;
+- серверная синхронизация likes и истории просмотров.
+
 ### Разделение ответственности
+
+Схема ниже показывает целевое разделение состояния в production-версии. В текущем MVP уже есть `items`, `activeIndex`, `isMuted`, `likedIds`, а также локальные состояния loading/error/pause/progress. `cursor`, `viewedIds`, `Map` video refs и AbortControllers добавляются, когда появятся pagination, виртуализация и управляемая предзагрузка.
 
 ```mermaid
 flowchart LR
@@ -400,7 +480,7 @@ flowchart LR
 - `Map<videoId, HTMLVideoElement>` — прямой доступ для orchestrator;
 - abort controllers для prefetch.
 
-### Селекторы (анти-pattern re-render)
+### Как избежать лишних перерисовок с помощью селекторов
 
 ```typescript
 // ✅ Подписка только на нужные данные (useAppSelector + memoized selectors)
@@ -411,7 +491,7 @@ const isActive = useAppSelector(state => state.feed.activeIndex === index);
 const feed = useAppSelector(state => state.feed);
 ```
 
-Pagination через **RTK Query** (`feedApi.endpoints.getFeedPage`) — кэш страниц, dedupe запросов, invalidation при необходимости.
+Pagination через **RTK Query** (`feedApi.endpoints.getFeedPage`) — кэш страниц, защита от одновременных повторных запросов, invalidation при необходимости.
 
 ### Кэш просмотренного
 
@@ -459,9 +539,21 @@ const feedSlice = createSlice({
 
 ## 5. Производительность
 
+### Что есть в прототипе
+
+- одновременно играет только active video;
+- Page Visibility API ставит ролик на паузу в неактивной  вкладке и продолжает воспроизведение при возврате;
+- preload ограничен активным и следующим роликом.
+
+### Что добавить в рабочем проекте
+
+- `@tanstack/react-virtual` для длинного списка;
+- cleanup старых `<video>` и ограничение числа decoder instances;
+- `React.memo`, requestAnimationFrame для progress bar и задержка обработки при быстром скролле.
+
 ### Виртуализация длинного списка
 
-1000 `<video>` в DOM — недопустимо (память, декодеры, layout).
+1000 `<video>` в DOM перегружают память, видеодекодеры и отрисовку.
 
 **Подход:** windowed render через `@tanstack/react-virtual`:
 
@@ -486,9 +578,9 @@ function unloadVideo(video: HTMLVideoElement) {
 
 ### Борьба с лишними re-render
 
-- `React.memo(FeedSlide)` с compare по `item.id`, `isActive`, `isMuted`;
+- `React.memo(FeedSlide)` со сравнением по `item.id`, `isActive`, `isMuted`;
 - progress bar обновлять через `requestAnimationFrame` + ref, не `setState`;
-- playback orchestrator — singleton / module scope, не React context;
+- PlaybackOrchestrator — один общий объект для всей ленты, а не отдельный объект внутри каждой карточки.
 - избегать inline objects/functions в props слайдов.
 
 ### Поведение при быстром скролле
@@ -513,74 +605,86 @@ function unloadVideo(video: HTMLVideoElement) {
 
 ---
 
-## 6. Что было бы сделано иначе
+## 6. Что можно улучшить по сравнению с TikTok, Reels и Shorts
+
+### Что есть в прототипе
+
+- явная кнопка звука вместо непонятного muted autoplay;
+- pause в фоновой вкладке;
+- Retry вместо чёрного экрана;
+- resume с последней позиции.
+
+### Что добавить в рабочем проекте
+
+- Data Saver / Wi-Fi-only preload;
+- captions, focus management и progressive UI hiding;
+- predictive prefetch и offline cache.
 
 Осознанные улучшения по сравнению с типичным UX TikTok / Reels / Shorts:
 
-| Область | Проблема в существующих продуктах | Предлагаемое решение |
-|---------|-----------------------------------|----------------------|
-| Autoplay без звука | Пользователь не понимает, что muted | Явный «Tap for sound» + запоминание выбора |
-| Data saver | Агрессивный prefetch | Respect `Save-Data` + настройка «Wi-Fi only» |
-| Accessibility | Плохая поддержка screen reader | `aria-label="Video 3 of 50"`, captions track, focus management |
-| Skip back | Prev ролик иногда перезагружается | Держать −1 в memory без unload |
-| Battery | Decode в фоне | Pause + unload при `document.hidden` |
-| UI overload | Всё на экране сразу | Progressive disclosure: UI fade через 2s, tap показывает |
-| Network errors | Чёрный экран | Poster + Retry + auto downgrade quality |
-| Scroll prediction | Одинаковый prefetch | Velocity-based: быстрый scroll → +2, медленный → +1 |
+| Что улучшаем | Типичная проблема | Как решаем |
+|--------------|------------------|------------|
+| Звук при автозапуске | Неясно, почему ролик без звука | Показываем заметную кнопку включения звука и запоминаем выбор |
+| Экономия трафика | Лента заранее загружает слишком много видео | Учитываем режим экономии трафика и разрешаем предзагрузку только по Wi‑Fi |
+| Доступность | Лентой сложно пользоваться со screen reader | Добавляем понятные подписи, субтитры и управление с клавиатуры |
+| Возврат к прошлому ролику | Видео приходится загружать заново | Держим предыдущий ролик в памяти и продолжаем с прошлого места |
+| Расход батареи | Видео продолжает работать в фоне | Ставим ролик на паузу, когда вкладка неактивна |
+| Перегруженный интерфейс | На экране слишком много кнопок | Скрываем элементы управления через пару секунд, показываем их по tap |
+| Ошибки сети | Вместо видео появляется чёрный экран | Показываем preview, кнопку повтора и при необходимости снижаем качество |
+| Быстрый скролл | Предзагрузка работает одинаково всегда | При быстром скролле готовим два следующих ролика, при медленном — один |
 
 ---
 
-## План реализации по этапам
+## Прогресс реализации
 
-| Этап | Что делаем | Результат |
-|------|-----------|-----------|
-| 1 | Fullscreen snap scroll, mock data, posters | Scroll UX без video |
-| 2 | Один `<video>`, IO → active, muted loop | Autoplay работает |
-| 3 | Virtualized window (4 slides), orchestrator | Multi-video без memory leak |
-| 4 | Preload +1, pagination, abort on scroll | Плавные переходы |
-| 5 | Unmute UX, visibility API, error states | Production-like polish |
-| 6 | Метрики, README, deploy | Готово к демо |
+- [x] Fullscreen-лента с CSS Scroll Snap
+- [x] Отслеживание активного слайда через Redux
+- [x] Нативное MP4-воспроизведение через Cloudflare R2
+- [x] Autoplay, pause/resume, переключатель звука и progress bar
+- [x] MVP-предзагрузка и Page Visibility API
+- [x] Loading, Retry и likes в Redux
+- [ ] Виртуализация длинной ленты
+- [ ] Cursor pagination и интеграция с API
+- [ ] PreloadManager с отменой запросов и учётом сети
+- [ ] HLS / адаптивный bitrate
+- [ ] Метрики, E2E-тесты и deployment
 
-**Оценка:** прототип — 1–2 дня; документ (этот README) — несколько часов.
+### Структура прототипа и план развития
 
-### Структура проекта (для прототипа)
+Обычные строки уже есть в проекте. Строки с `+` — планируется в production, они подсвечиваются зелёным.
 
-```
+```diff
 src/
+  App.tsx                  # корневой компонент
+  index.css                # глобальные стили
+  main.tsx                 # React root и Redux Provider
+  api/
+    mockFeed.ts            # локальные данные и URL видео из R2
++   feedApi.ts              # cursor pagination и запросы к API
   components/
-    FeedShell.tsx          # layout, dvh container
-    VirtualizedFeed.tsx    # tanstack virtual + snap
-    FeedSlide.tsx          # poster + video + overlay
-    VideoPlayer.tsx        # native video wrapper
-  core/
-    PlaybackOrchestrator.ts
-    PreloadManager.ts
-    IntersectionController.ts
+    FeedShell.tsx          # scroll snap и active slide
+    FeedShell.module.css
+    FeedSlide.tsx          # карточка ролика и overlay
+    FeedSlide.module.css
+    VideoPlayer.tsx        # native playback, preload и Page Visibility
+    VideoPlayer.module.css
++   VirtualizedFeed.tsx    # tanstack virtual для длинной ленты
++ core/
++   PlaybackOrchestrator.ts
++   PreloadManager.ts
++   IntersectionController.ts
   store/
     index.ts               # configureStore
-    feedSlice.ts           # feed reducers
-    feedApi.ts             # RTK Query endpoints
-    selectors.ts           # memoized selectors (reselect)
-  api/
-    feedApi.ts             # mock + cursor pagination
+    feedSlice.ts           # active slide, mute и likes
++   feedApi.ts             # RTK Query endpoints
++   selectors.ts           # memoized selectors
   hooks/
-    useActiveSlide.ts
-    usePageVisibility.ts
+    redux.ts               # typed Redux hooks
++   useActiveSlide.ts
++   usePageVisibility.ts
   types/
-    feed.ts
+    feed.ts                # FeedItem contract
 ```
-
----
-
-## Trade-offs
-
-| Решение | Плюс | Минус |
-|---------|------|-------|
-| Native `<video>` | Простота, малый bundle | Меньше контроля над ABR без hls.js |
-| CSS scroll snap | Нативная физика, a11y | Различия между браузерами |
-| Redux Toolkit | DevTools, предсказуемый flow, RTK Query | Больше boilerplate, чем у minimal stores |
-| Window 4 slides | Контроль памяти | Сложнее, чем render all |
-| Muted autoplay | Работает везде | UX требует явного unmute |
 
 ---
 
@@ -588,10 +692,7 @@ src/
 
 - **hls.js + adaptive bitrate** — если контент > 60 сек или нестабильная сеть
 - **Service Worker** — offline cache для poster + metadata
-- **Web Worker** — prefetch coordination вне main thread
-- **SSR первого item** — OG meta для shareable links
-- **E2E тесты** — Playwright: scroll → active video → preload next
+- **Web Worker** — расчёт очереди предзагрузки в отдельном потоке, чтобы не нагружать интерфейс.
+- **SSR первого ролика** — заголовок, описание и preview-картинка для ссылки в соцсетях и мессенджерах.
+- **E2E тесты** — проверка в браузере: скролл, запуск активного ролика и предзагрузка следующего.
 
----
-
-*Автор: технический план для тестового задания «Лента медиа-контента (frontend)».*
