@@ -461,7 +461,7 @@ flowchart LR
     end
 ```
 
-### Что хранить где
+### Что, где хранить 
 
 **В Redux (slice `feed`):**
 
